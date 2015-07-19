@@ -5,17 +5,27 @@
 WIDTH=600
 HEIGHT=350
 
+if [ "$#" -ne 3 ]; then
+    echo "Error: Illegal number of parameters"
+    echo "USAGE: sh makeframes.sh <images-dir> <transitions-dir> <frames-dir>"
+    exit 1
+fi
+
+### Arguments
+
 IMG_DIR="$1"
-
-SLIDE_FRAME_COUNT=5
-
+FRAMES_DIR="$3"
 TRANSITIONS_DIR="$2"
+
+### Config
+
 TRANSITION_FRAME_COUNT=4
 TRANSITION_MODE="dissolve" # wipe or dissolve
 TRANSITION_DELAY=2
 TRANSITION_PAUSE=2
 TRANSITION=""
-FRAMES_DIR="$3"
+
+SLIDE_FRAME_COUNT=5
 
 ### Functions
 
@@ -67,7 +77,7 @@ function makeTransition {
 ######
 
 # Delete old frames
-rm -R $FRAMES_DIR*
+#rm -R $FRAMES_DIR*
 
 # Render frames
 # Resize all images with blur background
