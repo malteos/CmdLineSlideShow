@@ -2,8 +2,8 @@
 #####################
 # Make frames
 
-WIDTH=600
-HEIGHT=350
+WIDTH=800
+HEIGHT=600
 
 if [ "$#" -ne 3 ]; then
     echo "Error: Illegal number of parameters"
@@ -19,13 +19,13 @@ TRANSITIONS_DIR="$2"
 
 ### Config
 
-TRANSITION_FRAME_COUNT=4
+TRANSITION_FRAME_COUNT=21
 TRANSITION_MODE="dissolve" # wipe or dissolve
-TRANSITION_DELAY=2
-TRANSITION_PAUSE=2
+TRANSITION_DELAY=10
+TRANSITION_PAUSE=10
 TRANSITION=""
 
-SLIDE_FRAME_COUNT=5
+SLIDE_FRAME_COUNT=20
 
 ### Functions
 
@@ -38,7 +38,15 @@ function resizeImage {
 function zoomImage {
   # convert
   echo Zoom $1 to $2 factor $3
-  let FACTOR=-25*$3
+  STEP=$3
+  SLIDE=$4
+
+  let FACTOR=5*$3
+
+  if [ $((SLIDE%2)) -eq 0 ]
+  then
+    let FACTOR=-$FACTOR
+  fi
 
   convert "$1" \( -clone 0 -blur 0x9 -resize "$WIDTH"x"$HEIGHT"\! \) \( -clone 0 -resize "$((WIDTH+FACTOR))"x"$((HEIGHT+FACTOR))" \) -delete 0 -gravity center -compose over -composite $2
 }
@@ -56,11 +64,9 @@ function makeTransition {
   TO_FILE="$FRAMES_DIR$TO_FRAME.png"
   TARGET="f$1t$2.png"
 
-
   setRandomTransition
 
   echo "Transition form $FROM_FRAME to $TO_FRAME with $TRANSITION"
-
 
   # Call transitions scripts
   sh scripts/transitions -m $TRANSITION_MODE -f $TRANSITION_FRAME_COUNT -d $TRANSITION_DELAY -p $TRANSITION_PAUSE "$FROM_FILE" "$TO_FILE" $TRANSITION "$FRAMES_DIR$TARGET"
@@ -69,7 +75,7 @@ function makeTransition {
   for (( c=0; c<$TRANSITION_FRAME_COUNT; c++ ))
   do
     let NEW=$c+$FROM_FRAME+1
-    mv $FRAMES_DIR"f$1t$2-$c.png" $FRAMES_DIR$NEW.trans.png
+    mv $FRAMES_DIR"f$1t$2-$c.png" $FRAMES_DIR$NEW.png
   done
 
 }
@@ -96,7 +102,7 @@ do
   do
     #cp "$FRAMES_DIR$CURRENT_SLIDE.png" "$FRAMES_DIR$((CURRENT_FRAME++)).x.png"
     #resizeImage "$IMG" "$FRAMES_DIR$((CURRENT_FRAME++)).png"
-    zoomImage "$IMG" "$FRAMES_DIR$((CURRENT_FRAME++)).png" $s
+    zoomImage "$IMG" "$FRAMES_DIR$((CURRENT_FRAME++)).png" $s $IMG_COUNTER
 
   done
 
@@ -105,7 +111,7 @@ do
   then
     #echo makeTransition $LAST_FRAME $CURRENT_FRAME
     # last from of last slide --> to --> first frame of current slide
-    echo makeTransition $LAST_FRAME $CURRENT_SLIDE
+    makeTransition $LAST_FRAME $CURRENT_SLIDE
   fi
 
   ((IMG_COUNTER++))
