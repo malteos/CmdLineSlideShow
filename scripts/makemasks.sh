@@ -3,7 +3,7 @@
 # Generate masks for transitions depending on width and height. ImageMagick (convert) is required.
 #
 # Example: sh makemasks.sh 800 600 masks
-# 
+#
 #####################
 
 if [ $# -ne 3 ]
@@ -39,5 +39,3 @@ convert -size "$W"x"$H" xc: +noise Random -virtual-pixel tile -fx intensity -blu
 convert -size "$W"x"$H" xc: +noise Random -virtual-pixel tile -fx intensity -blur 0x18 -contrast-stretch 0% $DIR/moreblurredrandomnoise.jpg
 
 convert -size "$W"x"$H" plasma:fractal -virtual-pixel tile -fx intensity $DIR/plasma.jpg
-
-exit 0

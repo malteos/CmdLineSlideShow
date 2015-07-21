@@ -2,7 +2,8 @@
 #####################
 # Make slide show
 
-node imdbscraper.js workingdir/
+
+#node imdbscraper.js workingdir/
 
 # loop dirs
 makeframes ..
