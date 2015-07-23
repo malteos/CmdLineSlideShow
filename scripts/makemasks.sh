@@ -39,3 +39,5 @@ convert -size "$W"x"$H" xc: +noise Random -virtual-pixel tile -fx intensity -blu
 convert -size "$W"x"$H" xc: +noise Random -virtual-pixel tile -fx intensity -blur 0x18 -contrast-stretch 0% $DIR/moreblurredrandomnoise.jpg
 
 convert -size "$W"x"$H" plasma:fractal -virtual-pixel tile -fx intensity $DIR/plasma.jpg
+
+convert \( -size "$shutterH"x"$H" gradient: -rotate 90 \) \( -clone 0 -rotate 180 \) -append miff:- | convert -size "$W"x"$H" tile:miff: -flop $DIR/alternating_gradient.jpg
