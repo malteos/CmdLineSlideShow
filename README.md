@@ -18,10 +18,15 @@ The working directory requires following structure:
 
 ```
 ./working-dir/
--- /images/          All images need to be in this directory
--- /frames/         (optional: Frames are temporary written in this directory)
--- title.txt        (optional: Video title in meta data)
--- description.txt  (optional: Video description in meta data)
+-- /transitions/     All transition masks are stored in this directory
+-- /slideshow-dir-a/
+---- /images/          All images need to be in this directory
+---- /frames/         (optional: Frames are temporary written in this directory)
+---- title.txt        (optional: Video title in meta data)
+---- description.txt  (optional: Video description in meta data)
+-- /slideshow-dir-b/
+--- ...
+-- /another-slideshow/
 ```
 
 ### Powered by
