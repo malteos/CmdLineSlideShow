@@ -13,8 +13,8 @@ TRANSITION_PAUSE=1
 TRANSITION=""
 DELETE_FRAMES=
 
-TRANSITION_LENGTH=110 # in seconds * 100
-SLIDE_LENGTH=220
+TRANSITION_LENGTH=210 # in seconds * 100
+SLIDE_LENGTH=420
 
 ## Arguments
 function usage {
@@ -79,24 +79,42 @@ SLIDE_FRAME_COUNT=$((FRAME_RATE*SLIDE_LENGTH/100))
 function resizeImage {
   # convert
   echo Resize $1 to $2
-  convert "$1" \( -clone 0 -blur 0x9 -resize "$WIDTH"x"$HEIGHT"\! \) \( -clone 0 -resize "$WIDTH"x"$HEIGHT" \) -delete 0 -gravity center -compose over -composite $2
+  convert "$1" \( -clone 0 -blur 0x9 -resize "$WIDTH"x"$HEIGHT"\! \) \( -clone 0 -resize "$WIDTH"X"$HEIGHT" \) -delete 0 -gravity center -compose over -composite $2
 }
 
 function zoomImage {
   # convert
   echo Zoom $1 to $2 factor $3
+  INPUT=$1
+  OUTPUT=$2
+  TMP=$INPUT"_tmp.jpg"
   STEP=$3
   SLIDE=$4
 
+  if [ $STEP -eq 0 ]
+  then
+    # First step -> create background
+    convert "$IMG" \( -clone 0 -blur 0x12 -resize "$WIDTH"x"$HEIGHT"\! \) -delete 0 $TMP
+  fi
+
   ## TODO factor depending on width/height
-  let FACTOR=2*$3
+  let X=1
+  let FACTOR=$X*$3
 
   if [ $((SLIDE%2)) -eq 0 ]
   then
-    let FACTOR=100-$FACTOR
+    let FACTOR=$SLIDE_FRAME_COUNT*$X-$FACTOR
   fi
 
-  convert "$1" \( -clone 0 -blur 0x9 -resize "$WIDTH"x"$HEIGHT"\! \) \( -clone 0 -resize "$((WIDTH+FACTOR))"x"$((HEIGHT+FACTOR))" \) -delete 0 -gravity center -compose over -composite $2
+  # Create frame
+  convert "$INPUT" \( $TMP \) \( -clone 0 -resize "$((WIDTH+FACTOR))"X"$((HEIGHT+FACTOR))" \) -delete 0 -gravity center -compose over -composite $OUTPUT
+
+  if [ $STEP -eq $((SLIDE_FRAME_COUNT-1)) ]
+  then
+    # Last step -> delete tmp background
+    rm $TMP
+  fi
+
 }
 
 # Set random mask file for transition
@@ -127,7 +145,7 @@ function makeTransition {
   FROM_FILE=`getFramePath $FROM_FRAME`
   TO_FRAME=$2
   TO_FILE=`getFramePath $TO_FRAME`
-  TARGET="f$1t$2.png"
+  TARGET="f$1t$2.jpg"
 
   setRandomTransition
 
@@ -141,14 +159,14 @@ function makeTransition {
   for (( c=0; c<$TRANSITION_FRAME_COUNT; c++ ))
   do
     let NEW=$c+$FROM_FRAME+1
-    mv $FRAMES_DIR"f$1t$2-$c.png" `getFramePath $NEW`
+    mv $FRAMES_DIR"f$1t$2-$c.jpg" `getFramePath $NEW`
   done
 }
 
 function getFramePath {
   FRAME=$1
   n=`printf %04d $FRAME`
-  echo $FRAMES_DIR$n.png
+  echo $FRAMES_DIR$n.jpg
 }
 
 function checkFramesDir {

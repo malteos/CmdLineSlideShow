@@ -6,7 +6,7 @@
 
 WIDTH=800
 HEIGHT=600
-FRAME_RATE=21
+FRAME_RATE=9
 
 # Arguments
 function usage() {
@@ -81,20 +81,24 @@ then
   exit 1
 else
   for PROJECT_DIR in $WORKING_DIR/*; do # Loop subdirectories
-    if ([[ -d $PROJECT_DIR ]] && [[ `echo $PROJECT_DIR | grep -v transitions` ]])
+    IMG_DIR=$PROJECT_DIR/images/
+    TRANSITIONS_DIR=$WORKING_DIR/transitions/
+    FRAMES_DIR=$PROJECT_DIR/frames/
+    OUTPUT_FILENAME=$PROJECT_DIR/output.mkv
+
+    # if
+    # a) is directory
+    # b) is not transition directory
+    # c) has images directory
+    if ([[ -d $PROJECT_DIR ]] && [[ `echo $PROJECT_DIR | grep -v transitions` ]] && [[ -d $IMG_DIR ]])
     then
       echo $PROJECT_DIR
-
-      IMG_DIR=$PROJECT_DIR/images/
-      TRANSITIONS_DIR=$WORKING_DIR/transitions/
-      FRAMES_DIR=$PROJECT_DIR/frames/
-      OUTPUT_FILENAME=$PROJECT_DIR/output.mkv
 
       # Generate frames with transitions and effects
       sh makeframes.sh -i $IMG_DIR -t $TRANSITIONS_DIR -f $FRAMES_DIR -w $WIDTH -h $HEIGHT -r $FRAME_RATE
 
       # Generate video file from frames with audio
-      ffmpeg -framerate $FRAME_RATE -i "$FRAMES_DIR"%*.png -i `getAudioFilename` -shortest -y $OUTPUT_FILENAME
+      ffmpeg -framerate $FRAME_RATE -i "$FRAMES_DIR"%*.jpg -i `getAudioFilename` -shortest -y $OUTPUT_FILENAME
 
       #
       echo "Upload $OUTPUT_FILENAME"
