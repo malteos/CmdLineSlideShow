@@ -17,7 +17,7 @@ TRANSITION_LENGTH=210 # in seconds * 100
 SLIDE_LENGTH=420
 
 ## Arguments
-function usage {
+usage() {
   echo "USAGE: $0 -i <images-dir> -t <transitions-dir> -f <frames-dir> [-w <width>] [-h <height>] [-r <frame-rate>] [-d dissolve] [-y delete]"
   exit 1;
 }
@@ -76,13 +76,50 @@ SLIDE_FRAME_COUNT=$((FRAME_RATE*SLIDE_LENGTH/100))
 
 ### Functions
 
-function resizeImage {
+resizeImage() {
   # convert
   echo Resize $1 to $2
   convert "$1" \( -clone 0 -blur 0x9 -resize "$WIDTH"x"$HEIGHT"\! \) \( -clone 0 -resize "$WIDTH"X"$HEIGHT" \) -delete 0 -gravity center -compose over -composite $2
 }
 
-function zoomImage {
+# Rotate
+rotateImage() {
+  # convert
+  echo Rotate $1 to $2 factor $3
+  INPUT=$1
+  OUTPUT=$2
+  TMP=$INPUT"_tmp.jpg"
+  STEP=$3
+  SLIDE=$4
+
+  if [ $STEP -eq 0 ]
+  then
+    # First step -> create background
+    convert "$IMG" \( -clone 0 -blur 0x12 -resize "$WIDTH"x"$HEIGHT"\! \) -delete 0 $TMP
+  fi
+
+  ## TODO factor depending on width/height
+  let X=1
+  let FACTOR=$X*$3
+
+  if [ $((SLIDE%2)) -eq 0 ]
+  then
+    let FACTOR=$SLIDE_FRAME_COUNT*$X-$FACTOR
+  fi
+
+  # Create frame
+  # convert
+  convert "$INPUT" \( $TMP \) \( -clone 0 -background 'rgba(0,0,0,0)' -rotate $FACTOR \) -delete 0 -gravity center -compose over -composite $OUTPUT
+
+  if [ $STEP -eq $((SLIDE_FRAME_COUNT-1)) ]
+  then
+    # Last step -> delete tmp background
+    rm $TMP
+  fi
+}
+
+# Zoom in and/or out
+zoomImage() {
   # convert
   echo Zoom $1 to $2 factor $3
   INPUT=$1
@@ -107,6 +144,7 @@ function zoomImage {
   fi
 
   # Create frame
+  # convert
   convert "$INPUT" \( $TMP \) \( -clone 0 -resize "$((WIDTH+FACTOR))"X"$((HEIGHT+FACTOR))" \) -delete 0 -gravity center -compose over -composite $OUTPUT
 
   if [ $STEP -eq $((SLIDE_FRAME_COUNT-1)) ]
@@ -114,32 +152,29 @@ function zoomImage {
     # Last step -> delete tmp background
     rm $TMP
   fi
-
 }
 
 # Set random mask file for transition
 # if masks not exists in correct size, makemasks scripts creates all masks.
-function setRandomTransition {
-  if [ -d "$TRANSITIONS_DIR" ]
-  then
-    if [ "$(ls -A $TRANSITIONS_DIR)" ]
-    then
-      files=($TRANSITIONS_DIR*)
-      TRANSITION=${files[RANDOM % ${#files[@]}]}
-      echo $TRANSITION
+setRandomTransition() {
+  if [ -d "$TRANSITIONS_DIR" ]; then
+    if [ "$(ls -A $TRANSITIONS_DIR)" ]; then
+      files=($TRANSITIONS_DIR*);
+      TRANSITION=${files[RANDOM % ${#files[@]}]};
+      echo $TRANSITION;
     else
       # call makemasks script
-      source scripts/makemasks.sh $WIDTH $HEIGHT $TRANSITIONS_DIR
-      setRandomTransition
-    fi
+      source scripts/makemasks.sh $WIDTH $HEIGHT $TRANSITIONS_DIR;
+      setRandomTransition;
+    fi;
   else
     # create transitions dir
-    mkdir $TRANSITIONS_DIR
-    setRandomTransition
-  fi
+    mkdir $TRANSITIONS_DIR;
+    setRandomTransition;
+  fi;
 }
 
-function makeTransition {
+makeTransition() {
   # Parameters
   FROM_FRAME=$1
   FROM_FILE=`getFramePath $FROM_FRAME`
@@ -163,19 +198,18 @@ function makeTransition {
   done
 }
 
-function getFramePath {
+getFramePath() {
   FRAME=$1
   n=`printf %04d $FRAME`
   echo $FRAMES_DIR$n.jpg
 }
 
-function checkFramesDir {
-  if [[ ! -d $FRAMES_DIR ]]
-  then
+checkFramesDir() {
+  if [[ ! -d $FRAMES_DIR ]]; then
     echo "Error: Frames directory does not exists at $FRAMES_DIR"
     echo "Creating frames directory ..."
     mkdir $FRAMES_DIR
-  fi
+  fi;
 }
 
 ######
@@ -205,7 +239,8 @@ do
   do
     #cp "$FRAMES_DIR$CURRENT_SLIDE.png" "$FRAMES_DIR$((CURRENT_FRAME++)).x.png"
     #resizeImage "$IMG" "$FRAMES_DIR$((CURRENT_FRAME++)).png"
-    zoomImage "$IMG" `getFramePath $CURRENT_FRAME` $s $IMG_COUNTER
+    #zoomImage "$IMG" `getFramePath $CURRENT_FRAME` $s $IMG_COUNTER
+    rotateImage "$IMG" `getFramePath $CURRENT_FRAME` $s $IMG_COUNTER
 
     let CURRENT_FRAME=CURRENT_FRAME+1
   done
