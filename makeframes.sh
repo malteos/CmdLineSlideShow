@@ -66,6 +66,7 @@ fi;
 # Update config based on arguments
 TRANSITION_FRAME_COUNT=$((FRAME_RATE*TRANSITION_LENGTH/100))
 SLIDE_FRAME_COUNT=$((FRAME_RATE*SLIDE_LENGTH/100))
+TRANSITIONS_DIR=$TRANSITIONS_DIR/"$WIDTH"x"$HEIGHT/"
 
 ### Debug Config
 
@@ -158,9 +159,12 @@ zoomImage() {
 # if masks not exists in correct size, makemasks scripts creates all masks.
 setRandomTransition() {
   if [ -d "$TRANSITIONS_DIR" ]; then
+    #if [ $(find $TRANSITIONS_DIR -maxdepth 0 -type d -empty 2>/dev/null) ]; then
     if [ "$(ls -A $TRANSITIONS_DIR)" ]; then
       files=($TRANSITIONS_DIR*);
       TRANSITION=${files[RANDOM % ${#files[@]}]};
+
+      echo ${#files[@]}
       echo $TRANSITION;
     else
       # call makemasks script
@@ -169,7 +173,7 @@ setRandomTransition() {
     fi;
   else
     # create transitions dir
-    mkdir $TRANSITIONS_DIR;
+    mkdir -p $TRANSITIONS_DIR;
     setRandomTransition;
   fi;
 }
@@ -191,10 +195,10 @@ makeTransition() {
   sh scripts/transitions -m $TRANSITION_MODE -f $TRANSITION_FRAME_COUNT -d $TRANSITION_DELAY -p $TRANSITION_PAUSE "$FROM_FILE" "$TO_FILE" $TRANSITION "$FRAMES_DIR$TARGET"
 
   # Rename frames
-  for (( c=0; c<$TRANSITION_FRAME_COUNT; c++ ))
+  for (( i=0; i < $TRANSITION_FRAME_COUNT; i++ ))
   do
     let NEW=$c+$FROM_FRAME+1
-    mv $FRAMES_DIR"f$1t$2-$c.jpg" `getFramePath $NEW`
+    mv $FRAMES_DIR"f$1t$2-$i.jpg" `getFramePath $NEW`
   done
 }
 
@@ -239,8 +243,8 @@ do
   do
     #cp "$FRAMES_DIR$CURRENT_SLIDE.png" "$FRAMES_DIR$((CURRENT_FRAME++)).x.png"
     #resizeImage "$IMG" "$FRAMES_DIR$((CURRENT_FRAME++)).png"
-    #zoomImage "$IMG" `getFramePath $CURRENT_FRAME` $s $IMG_COUNTER
-    rotateImage "$IMG" `getFramePath $CURRENT_FRAME` $s $IMG_COUNTER
+    zoomImage "$IMG" `getFramePath $CURRENT_FRAME` $s $IMG_COUNTER
+    #rotateImage "$IMG" `getFramePath $CURRENT_FRAME` $s $IMG_COUNTER
 
     let CURRENT_FRAME=CURRENT_FRAME+1
   done
