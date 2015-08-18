@@ -3,6 +3,7 @@
 # Make frames
 
 ## Config
+DIR="$(dirname "$0")"
 
 WIDTH=800
 HEIGHT=600
@@ -136,7 +137,7 @@ zoomImage() {
   fi
 
   ## TODO factor depending on width/height
-  let X=1
+  let X=2
   let FACTOR=$X*$3
 
   if [ $((SLIDE%2)) -eq 0 ]
@@ -168,7 +169,7 @@ setRandomTransition() {
       echo $TRANSITION;
     else
       # call makemasks script
-      source scripts/makemasks.sh $WIDTH $HEIGHT $TRANSITIONS_DIR;
+      source $DIR/scripts/makemasks.sh $WIDTH $HEIGHT $TRANSITIONS_DIR;
       setRandomTransition;
     fi;
   else
@@ -192,14 +193,15 @@ makeTransition() {
 
   # Call transitions scripts
   # -m wipe -f 21 -d 1 -p 0 examples/images/0.png examples/images/1.png examples/transitions/800x600/blurredrandomnoise.jpg
-  sh scripts/transitions -m $TRANSITION_MODE -f $TRANSITION_FRAME_COUNT -d $TRANSITION_DELAY -p $TRANSITION_PAUSE "$FROM_FILE" "$TO_FILE" $TRANSITION "$FRAMES_DIR$TARGET"
+  sh $DIR/scripts/transitions -m $TRANSITION_MODE -f $TRANSITION_FRAME_COUNT -d $TRANSITION_DELAY -p $TRANSITION_PAUSE "$FROM_FILE" "$TO_FILE" $TRANSITION "$FRAMES_DIR$TARGET"
 
   # Rename frames
   for (( i=0; i < $TRANSITION_FRAME_COUNT; i++ ))
   do
-    let NEW=$c+$FROM_FRAME+1
+    NEW=$((i+FROM_FRAME+1))
     mv $FRAMES_DIR"f$1t$2-$i.jpg" `getFramePath $NEW`
   done
+
 }
 
 getFramePath() {
