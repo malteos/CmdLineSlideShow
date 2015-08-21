@@ -3,14 +3,18 @@
 # Make slide show
 
 ## Default Config
-DIR="$(dirname "$0")"
+#DIR="$(dirname "$0")"
+MAKE_SLIDESHOW_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+OPTIND=1 # init arguments
+
 WIDTH=800
 HEIGHT=600
 FRAME_RATE=9
+VIDEO_FORMAT="mkv"
 
 # Arguments
-function usage() {
-  echo "USAGE: $0 -d <working-dir> -a <audio-path> [-w <width>] [-h <height>] [-r <frame-rate>] [-y delete]";
+usage() {
+  echo "USAGE: $0 -d <working-dir> -a <audio-path> [-w <width>] [-h <height>] [-r <frame-rate>] [-f <video-format>] [-y delete]";
   echo "";
   echo "INFO:"
   echo " -d <working-dir>: This directory should contain project directories. A project directory represents"
@@ -19,13 +23,15 @@ function usage() {
   echo ""
   echo " -a <audio-path>:  Path to audio file used in slideshow. If path is a directory, a random file is choosen."
   echo ""
+  echo " -f <video-format>: Video format extension (e.g. avi, mkv, mp4, ...)"
+  echo ""
   echo " -y delete:        If this argument is set, project images and frames are deleted after creation."
   exit 1;
 }
 
 
 # Parse arguments
-while getopts ":a:w:h:r:d:y:help:" opt; do
+while getopts ":a:w:h:r:d:f:y:help:" opt; do
   case $opt in
     a)
       AUDIO_PATH=${OPTARG}
@@ -41,6 +47,9 @@ while getopts ":a:w:h:r:d:y:help:" opt; do
       ;;
     d)
       WORKING_DIR=${OPTARG%/}
+      ;;
+    f)
+      VIDEO_FORMAT=${OPTARG}
       ;;
     y)
       DELETE_PROJECT=true
@@ -66,7 +75,7 @@ fi;
 ## Functions
 
 # Select audio file
-function getAudioFilename {
+getAudioFilename() {
   # if audio path is a directory -> random file from directory
   if [[ -d $AUDIO_PATH ]]
   then
@@ -96,10 +105,11 @@ then
   exit 1
 else
   for PROJECT_DIR in $WORKING_DIR/*; do # Loop subdirectories
+    PROJECT_NAME=`basename $PROJECT_DIR`
     IMG_DIR=$PROJECT_DIR/images/
     TRANSITIONS_DIR=$WORKING_DIR/transitions/
     FRAMES_DIR=$PROJECT_DIR/frames/
-    OUTPUT_FILENAME=$PROJECT_DIR/output.mkv
+    OUTPUT_FILENAME=$PROJECT_DIR/$PROJECT_NAME.$VIDEO_FORMAT
 
 
     # if
@@ -109,16 +119,16 @@ else
     if ([[ -d $PROJECT_DIR ]] && [[ `echo $PROJECT_DIR | grep -v transitions` ]] && [[ -d $IMG_DIR ]])
     then
 
-      echo $PROJECT_DIR;
+      echo $PROJECT_NAME;
 
       # Generate frames with transitions and effects
-      $DIR/makeframes.sh -i $IMG_DIR -t $TRANSITIONS_DIR -f $FRAMES_DIR -w $WIDTH -h $HEIGHT -r $FRAME_RATE
+      source $MAKE_SLIDESHOW_DIR/scripts/makeframes.sh -i $IMG_DIR -t $TRANSITIONS_DIR -f $FRAMES_DIR -w $WIDTH -h $HEIGHT -r $FRAME_RATE
 
       # Generate video file from frames with audio
       ffmpeg -framerate $FRAME_RATE -i "$FRAMES_DIR"%*.jpg -i `getAudioFilename` -shortest -y $OUTPUT_FILENAME
 
       #
-      echo "Upload $OUTPUT_FILENAME";
+      #echo "Upload $OUTPUT_FILENAME";
       PROJECT_COUNTER=$((PROJECT_COUNTER+1));
     fi
   done
@@ -129,10 +139,6 @@ then
   echo "ERROR: No projects found in working directory.";
   exit 1;
 fi
-
-exit 0
-
-
 
 #upload yt
 #

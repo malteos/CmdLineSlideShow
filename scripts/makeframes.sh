@@ -3,8 +3,13 @@
 # Make frames
 
 ## Config
-DIR="$(dirname "$0")"
+#DIR="$(dirname "$0")"
+MAKE_FRAMES_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+OPTIND=1 # init arguments
 
+IMG_DIR=
+FRAMES_DIR=
+TRANSITIONS_DIR=
 WIDTH=800
 HEIGHT=600
 FRAME_RATE=21
@@ -25,9 +30,13 @@ usage() {
 
 #WIDTH=`if [ "$#" -gt 3 ]; then echo $4; else echo $DEFAULT_WIDTH; fi`
 
+####
+
+#####
+
 # Parse arguments
-while getopts ":i:t:f:w:h:r:d:y:" opt; do
-  case $opt in
+while getopts ":i:t:f:w:h:r:d:y::" FLAG "$@"; do
+  case $FLAG in
     i)
       IMG_DIR=${OPTARG}
       ;;
@@ -50,7 +59,7 @@ while getopts ":i:t:f:w:h:r:d:y:" opt; do
       TRANSITION_MODE="dissolve"
       ;;
     y)
-      DELETE_FRAMES=true
+      DELETE_FRAMES=1
       ;;
     \?)
       echo "Error: Invalid option: -$OPTARG"; usage >&2
@@ -169,7 +178,7 @@ setRandomTransition() {
       echo $TRANSITION;
     else
       # call makemasks script
-      source $DIR/scripts/makemasks.sh $WIDTH $HEIGHT $TRANSITIONS_DIR;
+      source $MAKE_FRAMES_DIR/makemasks.sh $WIDTH $HEIGHT $TRANSITIONS_DIR;
       setRandomTransition;
     fi;
   else
@@ -193,7 +202,7 @@ makeTransition() {
 
   # Call transitions scripts
   # -m wipe -f 21 -d 1 -p 0 examples/images/0.png examples/images/1.png examples/transitions/800x600/blurredrandomnoise.jpg
-  sh $DIR/scripts/transitions -m $TRANSITION_MODE -f $TRANSITION_FRAME_COUNT -d $TRANSITION_DELAY -p $TRANSITION_PAUSE "$FROM_FILE" "$TO_FILE" $TRANSITION "$FRAMES_DIR$TARGET"
+  source $MAKE_FRAMES_DIR/transitions -m $TRANSITION_MODE -f $TRANSITION_FRAME_COUNT -d $TRANSITION_DELAY -p $TRANSITION_PAUSE "$FROM_FILE" "$TO_FILE" $TRANSITION "$FRAMES_DIR$TARGET"
 
   # Rename frames
   for (( i=0; i < $TRANSITION_FRAME_COUNT; i++ ))

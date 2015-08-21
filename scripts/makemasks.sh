@@ -16,7 +16,8 @@ if [ $# -ne 3 ]
     exit 1
 fi
 
-DIR="$(dirname "$0")"
+MAKE_MASKS_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+#DIR="$(dirname "$0")"
 
 # Input parameters
 W=$1
